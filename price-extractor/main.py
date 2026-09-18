@@ -1,8 +1,7 @@
 from fastapi import FastAPI
 from fetcher import request
 from database import Session, Base, engine
-from models.products import Product
-import sqlalchemy
+from models.product.products import Product
 
 Base.metadata.create_all(engine)
 product = Product(
