@@ -1,8 +1,12 @@
 from database import Base
+from models.monitoring_queue import MonitoringQueue
 from typing import Optional, List, TYPE_CHECKING
 from sqlalchemy import DateTime, func, String, DECIMAL, ForeignKey
-from sqlalchemy.orm import Mapped, mapped_column, Session, relationship
-from datetime import datetime, timezone
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from datetime import datetime
+
+if TYPE_CHECKING:
+    from .monitoring_queue import MonitoringQueue
 
 
 class Product(Base):
@@ -14,10 +18,6 @@ class Product(Base):
     name: Mapped[str]
     description: Mapped[Optional[str]]
     main_image_url: Mapped[str]
-    images: Mapped[List["ProductImage"]] = relationship(back_populates="product",
-                                                        cascade="all, delete-orphan")
-    prices: Mapped[List["ProductPrice"]] = relationship(back_populates="product",
-                                                        cascade="all, delete-orphan")
     availability: Mapped[bool] = mapped_column(nullable=False)
     rating_value: Mapped[float] 
     rating_count: Mapped[int]
@@ -32,6 +32,16 @@ class Product(Base):
                                                   DateTime(timezone=True),
                                                   onupdate=func.now())
 
+    # ------ One-to-Many relationships ------
+    images: Mapped[List["ProductImage"]] = relationship(back_populates="product",
+                                                            cascade="all, delete-orphan")
+    prices: Mapped[List["ProductPrice"]] = relationship(back_populates="product",
+                                                            cascade="all, delete-orphan")
+
+    # ------ One-to-One relationship ------
+    monitoring_queue: Mapped["MonitoringQueue"] = relationship(back_populates="product",
+                                                                   cascade="all, delete-orphan")
+
 
 
 class ProductImage(Base):
@@ -40,11 +50,11 @@ class ProductImage(Base):
 
     id: Mapped[int] = mapped_column(index=True, primary_key=True, unique=True)
     product_id: Mapped[int] = mapped_column(ForeignKey("products.id"))
-    product: Mapped["Product"] = relationship(back_populates="images")
     image_url: Mapped[str] = mapped_column(String(255), unique=True)
     created_at: Mapped[datetime] = mapped_column(
                                    DateTime(timezone=True),
                                    server_default=func.now())
+    product: Mapped["Product"] = relationship(back_populates="images")
 
 
 
@@ -54,9 +64,9 @@ class ProductPrice(Base):
      
     id: Mapped[int] = mapped_column(index=True, primary_key=True, unique=True)
     product_id: Mapped[int] = mapped_column(ForeignKey("products.id"))
-    product: Mapped["Product"] = relationship(back_populates="prices")
     price: Mapped[float] = mapped_column(DECIMAL(10,2), nullable=False)
     effective_date: Mapped[datetime] = mapped_column(
                                        DateTime(timezone=True),
                                        server_default=func.now())
+    product: Mapped["Product"] = relationship(back_populates="prices")
     

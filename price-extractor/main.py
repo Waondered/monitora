@@ -1,7 +1,7 @@
-from fastapi import FastAPI
-from fetcher import request
+# from fastapi import FastAPI
+# from fetcher import request
 from database import Session, Base, engine
-from models.product.products import Product
+from models import Product
 
 Base.metadata.create_all(engine)
 product = Product(
